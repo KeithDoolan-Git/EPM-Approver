@@ -1,4 +1,4 @@
-import { AzureFunction, Context, Timer } from "@azure/functions";
+import { Timer } from "@azure/functions";
 import * as crypto from "crypto";
 import { loadConfig, validateConfig } from "../lib/config-loader";
 import { GraphClient } from "../lib/graph-client";
@@ -7,16 +7,13 @@ import { generateApprovalToken } from "../lib/token-manager";
 import { generateApprovalEmailHtml } from "../lib/email-template";
 import { info, error, setLogLevel } from "../lib/logger";
 
-const timerTrigger: AzureFunction = async function (
-  context: Context,
-  myTimer: Timer
-): Promise<void> {
+async function timerTrigger(myTimer: Timer): Promise<void> {
   try {
     const config = loadConfig();
     validateConfig(config);
     setLogLevel(config.logLevel);
 
-    info("Starting elevation request polling", context);
+    info("Starting elevation request polling");
 
     // Initialize services
     const graphClient = new GraphClient(config);
@@ -25,10 +22,10 @@ const timerTrigger: AzureFunction = async function (
 
     // Fetch pending requests from Intune
     const requests = await graphClient.getElevationRequests();
-    info(`Found ${requests.length} pending elevation requests`, context);
+    info(`Found ${requests.length} pending elevation requests`);
 
     if (requests.length === 0) {
-      info("No pending requests", context);
+      info("No pending requests");
       return;
     }
 
@@ -37,7 +34,7 @@ const timerTrigger: AzureFunction = async function (
       try {
         // Check if already notified
         if (stateManager.isRequestNotified(request.id)) {
-          info(`Request ${request.id} already notified`, context);
+          info(`Request ${request.id} already notified`);
           continue;
         }
 
@@ -68,23 +65,18 @@ const timerTrigger: AzureFunction = async function (
           stateManager.markRequestNotified(request.id, requestHash, "pending");
           await stateManager.save();
 
-          info(`Sent notification for request ${request.id}`, context, {
+          info(`Sent notification for request ${request.id}`);
+          console.log({
             requester: request.requestedBy,
             device: request.requestedDevice,
             application: request.displayName,
           });
         } else {
-          error(
-            `Failed to send notification for request ${request.id}`,
-            context
-          );
+          error(`Failed to send notification for request ${request.id}`);
         }
       } catch (err) {
-        error(
-          `Error processing request ${request.id}`,
-          context,
-          err
-        );
+        error(`Error processing request ${request.id}`);
+        console.error(err);
       }
     }
 
@@ -92,12 +84,13 @@ const timerTrigger: AzureFunction = async function (
     stateManager.clearOldEntries(30);
     await stateManager.save();
 
-    info("Polling cycle completed", context);
+    info("Polling cycle completed");
   } catch (err) {
-    error("Fatal error in polling function", context, err);
+    error("Fatal error in polling function");
+    console.error(err);
     throw err;
   }
-};
+}
 
 function calculateRequestHash(obj: any): string {
   const json = JSON.stringify(obj);

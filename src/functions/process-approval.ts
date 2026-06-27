@@ -1,4 +1,4 @@
-import { AzureFunction, Context, HttpRequest, HttpStatusCode } from "@azure/functions";
+import { HttpRequest, HttpResponseInit } from "@azure/functions";
 import { loadConfig, validateConfig } from "../lib/config-loader";
 import { GraphClient } from "../lib/graph-client";
 import { verifyApprovalToken } from "../lib/token-manager";
@@ -6,57 +6,55 @@ import { StateManager } from "../lib/state-manager";
 import { generateConfirmationEmailHtml } from "../lib/email-template";
 import { info, error, warn, setLogLevel } from "../lib/logger";
 
-const httpTrigger: AzureFunction = async function (
-  context: Context,
-  req: HttpRequest
-): Promise<void> {
+async function processApproval(
+  request: HttpRequest
+): Promise<HttpResponseInit> {
   try {
     const config = loadConfig();
     validateConfig(config);
     setLogLevel(config.logLevel);
 
-    info("Processing approval action", context);
+    info("Processing approval action");
 
     // Extract query parameters
-    const token = req.query.token || req.body?.token;
-    const action = (req.query.action || req.body?.action) as string;
+    const url = new URL(request.url);
+    const token = url.searchParams.get("token");
+    const action = url.searchParams.get("action");
 
     if (!token) {
-      warn("Missing token in request", context);
-      context.res = {
+      warn("Missing token in request");
+      return {
         status: 400,
         body: "Missing approval token",
       };
-      return;
     }
 
     if (!action || !["approve", "deny"].includes(action)) {
-      warn("Invalid action", context, { action });
-      context.res = {
+      warn(`Invalid action: ${action}`);
+      return {
         status: 400,
         body: "Invalid action. Use 'approve' or 'deny'",
       };
-      return;
     }
 
     // Verify token signature and expiry
     const decodedToken = verifyApprovalToken(token, config);
     if (!decodedToken) {
-      warn("Invalid or expired token", context);
-      context.res = {
+      warn("Invalid or expired token");
+      return {
         status: 401,
         body: "Token is invalid or expired",
       };
-      return;
     }
 
     if (decodedToken.action !== action) {
-      warn("Token action mismatch", context, { expected: decodedToken.action, got: action });
-      context.res = {
+      warn(
+        `Token action mismatch: expected ${decodedToken.action}, got ${action}`
+      );
+      return {
         status: 400,
         body: "Token action mismatch",
       };
-      return;
     }
 
     const requestId = decodedToken.requestId;
@@ -67,14 +65,13 @@ const httpTrigger: AzureFunction = async function (
     await stateManager.initialize();
 
     // Fetch full request details
-    const request = await graphClient.getElevationRequest(requestId);
-    if (!request) {
-      error(`Request not found: ${requestId}`, context);
-      context.res = {
+    const req = await graphClient.getElevationRequest(requestId);
+    if (!req) {
+      error(`Request not found: ${requestId}`);
+      return {
         status: 404,
         body: "Request not found or already processed",
       };
-      return;
     }
 
     // Process approval or denial
@@ -92,39 +89,37 @@ const httpTrigger: AzureFunction = async function (
     }
 
     if (!success) {
-      error(`Failed to ${action} request`, context, { requestId });
-      context.res = {
+      error(`Failed to ${action} request ${requestId}`);
+      return {
         status: 500,
         body: `Failed to ${action} the request. Please try again or use Intune directly.`,
       };
-      return;
     }
 
     // Update state
-    stateManager.updateRequestStatus(requestId, action === "approve" ? "approved" : "denied");
+    stateManager.updateRequestStatus(
+      requestId,
+      action === "approve" ? "approved" : "denied"
+    );
     await stateManager.save();
 
     // Send confirmation email to requester
     const confirmationHtml = generateConfirmationEmailHtml(
-      request,
+      req,
       action as "approved" | "denied",
       config.sharedMailboxEmail
     );
 
     await graphClient.sendEmail(
-      request.requestedBy,
+      req.requestedBy,
       `[EPM] Your elevation request was ${action}`,
       confirmationHtml
     );
 
-    info(`Request ${action}ed successfully`, context, {
-      requestId,
-      requester: request.requestedBy,
-      action,
-    });
+    info(`Request ${action}ed successfully: ${requestId}`);
 
     // Return success response
-    context.res = {
+    return {
       status: 200,
       body: `
         <html>
@@ -160,12 +155,13 @@ const httpTrigger: AzureFunction = async function (
       },
     };
   } catch (err) {
-    error("Fatal error in approval handler", context, err);
-    context.res = {
+    error("Fatal error in approval handler");
+    console.error(err);
+    return {
       status: 500,
       body: "An unexpected error occurred",
     };
   }
-};
+}
 
-export default httpTrigger;
+export default processApproval;

@@ -7,7 +7,10 @@
       "Bash(git config *)",
       "Bash(git add *)",
       "Bash(git commit -m 'Initial commit: EPM Notification Service project structure *)",
-      "Bash(git commit -m 'Add local testing infrastructure and documentation *)"
+      "Bash(git commit -m 'Add local testing infrastructure and documentation *)",
+      "PowerShell(choco install azure-functions-core-tools-4 -y)",
+      "PowerShell(npm install -g azure-functions-core-tools@4 --force)",
+      "Bash(git commit -m 'Fix TypeScript compilation and local testing setup *)"
     ]
   }
 }

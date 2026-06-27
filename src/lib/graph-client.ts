@@ -16,7 +16,7 @@ export interface ElevationRequest {
 
 export class GraphClient {
   private client: AxiosInstance;
-  private accessToken: string | null = null;
+  private accessToken: string = "";
   private tokenExpiry: number = 0;
   private config: AppConfig;
 
@@ -56,10 +56,12 @@ export class GraphClient {
       this.accessToken = response.data.access_token;
       this.tokenExpiry = now + response.data.expires_in * 1000 - 60000; // Refresh 1min before expiry
 
-      debug(`Access token acquired, expires in ${response.data.expires_in}s`);
+      debug(`Access token acquired, expires in ${response.data.expires_in}s`, {
+        expiresIn: response.data.expires_in,
+      });
       return this.accessToken;
     } catch (err) {
-      error("Failed to acquire access token", undefined, err);
+      error("Failed to acquire access token", err);
       throw err;
     }
   }
@@ -81,11 +83,13 @@ export class GraphClient {
       );
 
       const requests = response.data.value || [];
-      debug(`Retrieved ${requests.length} pending elevation requests`);
+      debug(`Retrieved ${requests.length} pending elevation requests`, {
+        count: requests.length,
+      });
 
       return requests;
     } catch (err) {
-      error("Failed to get elevation requests", undefined, err);
+      error("Failed to get elevation requests", err);
       return [];
     }
   }
@@ -105,7 +109,7 @@ export class GraphClient {
 
       return response.data;
     } catch (err) {
-      error(`Failed to get elevation request ${requestId}`, undefined, err);
+      error(`Failed to get elevation request ${requestId}`, err);
       return null;
     }
   }
@@ -133,7 +137,7 @@ export class GraphClient {
       info(`Approved elevation request: ${requestId}`);
       return true;
     } catch (err) {
-      error(`Failed to approve request ${requestId}`, undefined, err);
+      error(`Failed to approve request ${requestId}`, err);
       return false;
     }
   }
@@ -158,7 +162,7 @@ export class GraphClient {
       info(`Denied elevation request: ${requestId}`);
       return true;
     } catch (err) {
-      error(`Failed to deny request ${requestId}`, undefined, err);
+      error(`Failed to deny request ${requestId}`, err);
       return false;
     }
   }
@@ -204,7 +208,7 @@ export class GraphClient {
       info(`Email sent to ${toAddress}`);
       return true;
     } catch (err) {
-      error(`Failed to send email to ${toAddress}`, undefined, err);
+      error(`Failed to send email to ${toAddress}`, err);
       return false;
     }
   }

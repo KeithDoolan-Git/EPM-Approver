@@ -47,7 +47,7 @@ export class StateManager {
         await this.save();
       }
     } catch (err) {
-      error("Failed to initialize state manager", undefined, err);
+      error("Failed to initialize state manager", err);
       throw err;
     }
   }
@@ -62,7 +62,7 @@ export class StateManager {
       );
       debug("State saved");
     } catch (err) {
-      error("Failed to save state", undefined, err);
+      error("Failed to save state", err);
       throw err;
     }
   }
