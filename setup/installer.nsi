@@ -8,8 +8,12 @@
 
 !include "MUI2.nsh"
 
+; PROJECT_ROOT is the repo root (this script lives in <root>\setup).
+!define PROJECT_ROOT "${__FILEDIR__}\.."
+
 Name "EPM Notification Service"
-OutFile "epm-setup.exe"
+; Write the installer to the repo root so CI can find it at epm-setup.exe.
+OutFile "${PROJECT_ROOT}\epm-setup.exe"
 InstallDir "$PROGRAMFILES64\EPM-Notification-Service"
 InstallDirRegKey HKCU "Software\EPMNotificationService" "InstallDir"
 RequestExecutionLevel admin
@@ -30,14 +34,14 @@ RequestExecutionLevel admin
 Section "Install"
     SetOutPath "$INSTDIR"
 
-    ; Bundle the project source (relative to repo root). A fresh git checkout
-    ; has no node_modules/dist/.git, so there is nothing to exclude.
-    File /r "src"
-    File /r "setup"
-    File "package.json"
-    File "tsconfig.json"
-    File "host.json"
-    File "README.md"
+    ; Bundle the project source. A fresh git checkout has no
+    ; node_modules/dist/.git, so there is nothing to exclude.
+    File /r "${PROJECT_ROOT}\src"
+    File /r "${PROJECT_ROOT}\setup"
+    File "${PROJECT_ROOT}\package.json"
+    File "${PROJECT_ROOT}\tsconfig.json"
+    File "${PROJECT_ROOT}\host.json"
+    File "${PROJECT_ROOT}\README.md"
 
     WriteRegStr HKCU "Software\EPMNotificationService" "InstallDir" "$INSTDIR"
 
