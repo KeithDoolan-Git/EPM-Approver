@@ -14,7 +14,15 @@
       "Bash(npm run *)",
       "PowerShell(Test-NetConnection -ComputerName 127.0.0.1 -Port 10000 -InformationLevel Quiet)",
       "PowerShell($conn = Get-NetTCPConnection -LocalPort 7071 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; Write-Host \"Port 7071 held by: $\\($p.ProcessName\\) \\(PID $\\($p.Id\\)\\)\"; Stop-Process -Id $_.OwningProcess -Force }; Write-Host \"Killed.\" } else { Write-Host \"Nothing listening on 7071.\" })",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git push *)",
+      "Bash(git tag *)",
+      "Bash(gh run *)",
+      "Bash(curl -s \"https://api.github.com/repos/KeithDoolan-Git/EPM-Approver/actions/runs?per_page=3\")",
+      "Bash(curl -s \"https://api.github.com/repos/KeithDoolan-Git/EPM-Approver/actions/runs/28337803121/jobs\")",
+      "Bash(curl -sL \"https://api.github.com/repos/KeithDoolan-Git/EPM-Approver/actions/runs/28337803121/logs\" -o /tmp/ci-logs.zip)",
+      "Read(//tmp/**)",
+      "Bash(unzip -o /tmp/ci-logs.zip -d /tmp/ci-logs)"
     ]
   }
 }
