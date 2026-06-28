@@ -32,7 +32,9 @@ jobs:
       - name: Build installer
         shell: pwsh
         run: |
-          & "C:\Program Files (x86)\NSIS\makensis.exe" /V4 setup/installer.nsi
+          # Pass an ABSOLUTE script path so NSIS's ${__FILEDIR__} resolves
+          # absolutely (a relative path makes File prepend the script dir twice).
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /V4 "$env:GITHUB_WORKSPACE\setup\installer.nsi"
 
       - name: Upload installer to release
         if: startsWith(github.ref, 'refs/tags/')
