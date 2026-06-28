@@ -2,7 +2,7 @@
   "name": "epm-notification-service",
   "version": "1.0.0",
   "description": "Intune Endpoint Privilege Management notification service with email approval workflow",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "start": "func start",
     "build": "tsc",

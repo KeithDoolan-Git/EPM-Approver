@@ -1,101 +1,72 @@
 ; EPM Notification Service Installer
-; NSIS Configuration
+; Self-contained NSIS installer: bundles the project source and launches the
+; PowerShell deployment script. Built in CI (see .github/workflows/build-installer.yml).
 
 !include "MUI2.nsh"
-!include "x64.nsh"
-!include "nsDialogs.nsh"
 !include "LogicLib.nsh"
 
-; Name and file
 Name "EPM Notification Service"
 OutFile "epm-setup.exe"
-InstallDir "$PROGRAMFILES\EPM-Notification-Service"
+InstallDir "$PROGRAMFILES64\EPM-Notification-Service"
 InstallDirRegKey HKCU "Software\EPMNotificationService" "InstallDir"
-
-; Request admin privileges
 RequestExecutionLevel admin
 
-; MUI Settings
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
-
 !insertmacro MUI_LANGUAGE "English"
 
 ; ============================================================================
-; INSTALLER SECTIONS
+; INSTALL
 ; ============================================================================
-
 Section "Install"
     SetOutPath "$INSTDIR"
 
-    ; Download latest repo from GitHub
-    DetailPrint "Downloading EPM Notification Service..."
+    ; Bundle the project files. Paths are relative to THIS script's directory
+    ; (${__FILEDIR__}) so the build works regardless of makensis' working dir.
+    ; A fresh git checkout has no node_modules/dist/.git, so nothing to exclude.
+    File /r "${__FILEDIR__}\..\src"
+    File /r "${__FILEDIR__}\..\setup"
+    File "${__FILEDIR__}\..\package.json"
+    File "${__FILEDIR__}\..\tsconfig.json"
+    File "${__FILEDIR__}\..\host.json"
+    File "${__FILEDIR__}\..\README.md"
 
-    ; Using powershell to download and extract zip
-    ExecWait 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& {$ProgressPreference=''SilentlyContinue''; $url=''https://github.com/YOUR_ORG/epm-notification-service/archive/main.zip''; $dest=''$env:TEMP\epm-main.zip''; Invoke-WebRequest -Uri $url -OutFile $dest; Expand-Archive -Path $dest -DestinationPath ''$INSTDIR'' -Force; Remove-Item $dest}"'
-
-    DetailPrint "Installation files extracted"
-
-    ; Store installation folder in registry
     WriteRegStr HKCU "Software\EPMNotificationService" "InstallDir" "$INSTDIR"
 
-    ; Create Start Menu shortcut
     CreateDirectory "$SMPROGRAMS\EPM Notification Service"
-    CreateShortCut "$SMPROGRAMS\EPM Notification Service\Setup.lnk" "$INSTDIR\setup\deploy.ps1"
-    CreateShortCut "$SMPROGRAMS\EPM Notification Service\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
+    CreateShortCut "$SMPROGRAMS\EPM Notification Service\Run Setup.lnk" "powershell.exe" "-NoProfile -ExecutionPolicy Bypass -File ""$INSTDIR\setup\deploy.ps1"""
     CreateShortCut "$SMPROGRAMS\EPM Notification Service\README.lnk" "$INSTDIR\README.md"
+    CreateShortCut "$SMPROGRAMS\EPM Notification Service\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
 
-    ; Create uninstaller
     WriteUninstaller "$INSTDIR\Uninstall.exe"
-
-    ; Run PowerShell setup script
-    DetailPrint "Launching setup script..."
-    ExecWait 'powershell -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\setup\deploy.ps1"'
-
 SectionEnd
 
 ; ============================================================================
-; UNINSTALLER
+; UNINSTALL
 ; ============================================================================
-
 Section "Uninstall"
-    ; Remove Start Menu shortcuts
     RMDir /r "$SMPROGRAMS\EPM Notification Service"
-
-    ; Remove installation directory
     RMDir /r "$INSTDIR"
-
-    ; Remove registry entries
     DeleteRegKey HKCU "Software\EPMNotificationService"
-
 SectionEnd
 
 ; ============================================================================
-; FUNCTIONS
+; HOOKS
 ; ============================================================================
-
 Function .onInit
-    ; Check Windows version (require Windows 10 or later)
-    ${If} ${RunningX64}
-        DetailPrint "Running on 64-bit Windows"
-    ${EndIf}
-
-    ; Check if PowerShell is available
-    ExecWait 'powershell -NoProfile -Command "Write-Host ''PowerShell is available''"' $0
+    ; PowerShell is required to run the deployment script.
+    nsExec::ExecToStack 'powershell -NoProfile -Command "exit 0"'
+    Pop $0
     ${If} $0 != 0
-        MessageBox MB_ICONSTOP "PowerShell is required but not found. Please install PowerShell 5.1 or later."
+        MessageBox MB_ICONSTOP "PowerShell 5.1+ is required but was not found."
         Abort
     ${EndIf}
-
 FunctionEnd
 
 Function .onInstSuccess
-    MessageBox MB_ICONINFORMATION "EPM Notification Service installation complete!$\n$\nA PowerShell window will open to complete the setup. You will need:$\n- Azure subscription$\n- Global Admin permissions for Entra"
-
+    MessageBox MB_YESNO "Installation complete.$\n$\nRun the Azure setup now?$\n$\nYou will need:$\n - An Azure subscription$\n - Global Admin (to create the app registration)$\n - Node.js, Azure CLI, and Azure Functions Core Tools installed" IDNO skipRun
+        Exec 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\setup\deploy.ps1"'
+    skipRun:
 FunctionEnd
-
-Section "Uninstall"
-    MessageBox MB_ICONINFORMATION "EPM Notification Service has been uninstalled."
-SectionEnd

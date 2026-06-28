@@ -10,10 +10,11 @@ build/
 *.js.map
 *.d.ts
 
-# Environment
+# Environment & secrets
 .env
 .env.local
 .env.*.local
+local.settings.json
 
 # IDE
 .vscode/
@@ -49,3 +50,9 @@ epm-setup.exe
 # Temporary files
 *.tmp
 .tmp/
+
+# Azurite storage emulator
+.azurite/
+__azurite_db*.json
+__blobstorage__/
+__queuestorage__/

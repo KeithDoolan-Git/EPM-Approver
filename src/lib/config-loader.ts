@@ -13,6 +13,7 @@ export interface AppConfig {
   webhookUrl: string;
   logLevel: "debug" | "info" | "warn" | "error";
   stateStorageConnection?: string;
+  mockMode: boolean;
 }
 
 function getEnvVar(key: string, defaultValue?: string): string {
@@ -39,6 +40,7 @@ export function loadConfig(): AppConfig {
     webhookUrl: getEnvVar("WEBHOOK_URL"),
     logLevel: (getEnvVar("LOG_LEVEL", "info") as any),
     stateStorageConnection: process.env.STATE_STORAGE_CONNECTION,
+    mockMode: (process.env.MOCK_MODE || "").toLowerCase() === "true",
   };
 }
 

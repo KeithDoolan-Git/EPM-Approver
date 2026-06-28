@@ -75,8 +75,8 @@ async function timerTrigger(myTimer: Timer): Promise<void> {
           error(`Failed to send notification for request ${request.id}`);
         }
       } catch (err) {
-        error(`Error processing request ${request.id}`);
-        console.error(err);
+        const msg = err instanceof Error ? err.message : String(err);
+        error(`Error processing request ${request.id}: ${msg}`);
       }
     }
 
@@ -86,8 +86,8 @@ async function timerTrigger(myTimer: Timer): Promise<void> {
 
     info("Polling cycle completed");
   } catch (err) {
-    error("Fatal error in polling function");
-    console.error(err);
+    const msg = err instanceof Error ? err.message : String(err);
+    error(`Fatal error in polling function: ${msg}`);
     throw err;
   }
 }

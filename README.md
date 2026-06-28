@@ -22,7 +22,7 @@ A lightweight, portable Windows service that monitors Microsoft Intune Endpoint 
 
 ### 1. Download the Installer
 
-Download the latest `epm-setup.exe` from [GitHub Releases](https://github.com/your-org/epm-notification-service/releases)
+Download the latest `epm-setup.exe` from [GitHub Releases](https://github.com/KeithDoolan-Git/EPM-Approver/releases)
 
 ### 2. Run the Installer
 
@@ -74,8 +74,8 @@ choco install azure-functions-core-tools-4 -y
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/epm-notification-service.git
-cd epm-notification-service
+git clone https://github.com/KeithDoolan-Git/EPM-Approver.git
+cd EPM-Approver
 npm install
 ```
 
@@ -311,8 +311,7 @@ MIT
 ## Support
 
 - **Documentation**: See [README.md](README.md)
-- **Issues**: [GitHub Issues](https://github.com/your-org/epm-notification-service/issues)
-- **Email**: support@your-org.com
+- **Issues**: [GitHub Issues](https://github.com/KeithDoolan-Git/EPM-Approver/issues)
 
 ---
 

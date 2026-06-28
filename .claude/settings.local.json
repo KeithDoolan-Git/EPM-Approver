@@ -10,7 +10,11 @@
       "Bash(git commit -m 'Add local testing infrastructure and documentation *)",
       "PowerShell(choco install azure-functions-core-tools-4 -y)",
       "PowerShell(npm install -g azure-functions-core-tools@4 --force)",
-      "Bash(git commit -m 'Fix TypeScript compilation and local testing setup *)"
+      "Bash(git commit -m 'Fix TypeScript compilation and local testing setup *)",
+      "Bash(npm run *)",
+      "PowerShell(Test-NetConnection -ComputerName 127.0.0.1 -Port 10000 -InformationLevel Quiet)",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 7071 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; Write-Host \"Port 7071 held by: $\\($p.ProcessName\\) \\(PID $\\($p.Id\\)\\)\"; Stop-Process -Id $_.OwningProcess -Force }; Write-Host \"Killed.\" } else { Write-Host \"Nothing listening on 7071.\" })",
+      "WebSearch"
     ]
   }
 }
