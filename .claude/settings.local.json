@@ -27,7 +27,9 @@
       "Bash(git credential *)",
       "Bash(curl -s \"https://api.github.com/repos/KeithDoolan-Git/EPM-Approver/actions/runs?per_page=1\")",
       "Bash(cd \"C:\\\\VS Projects\\\\Elevated Privilege Management\" *)",
-      "Bash(git commit -q -m 'Fix NSIS File paths: use absolute ${__FILEDIR__} root \\(was script-dir relative\\) *)"
+      "Bash(git commit -q -m 'Fix NSIS File paths: use absolute ${__FILEDIR__} root \\(was script-dir relative\\) *)",
+      "Bash(cat /tmp/ci4/build/3_Install*.txt 2>/dev/null | tail -25)",
+      "Bash(git commit -q -m 'Make NSIS setup resilient: prefer preinstalled, retry choco on transient failure *)"
     ]
   }
 }
