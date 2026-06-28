@@ -22,7 +22,9 @@
       "Bash(curl -s \"https://api.github.com/repos/KeithDoolan-Git/EPM-Approver/actions/runs/28337803121/jobs\")",
       "Bash(curl -sL \"https://api.github.com/repos/KeithDoolan-Git/EPM-Approver/actions/runs/28337803121/logs\" -o /tmp/ci-logs.zip)",
       "Read(//tmp/**)",
-      "Bash(unzip -o /tmp/ci-logs.zip -d /tmp/ci-logs)"
+      "Bash(unzip -o /tmp/ci-logs.zip -d /tmp/ci-logs)",
+      "Bash(curl -s \"https://api.github.com/repos/KeithDoolan-Git/EPM-Approver/actions/runs/28337886067/jobs\")",
+      "Bash(git credential *)"
     ]
   }
 }
